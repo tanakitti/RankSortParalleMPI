@@ -3,7 +3,7 @@
 #include <mpi.h>
 #include <limits.h>
 
-#define MAX 100000
+#define MAX 1000
 void mergearray(int k,int *array, int *array2){
     int start[k];
     int stop[k];
@@ -54,7 +54,7 @@ void shuffle(int *array, size_t n)
 int main(int argc, char *argv[]){
     int i,j,myid,numprocs;
     int list[MAX];
-
+    double t1,t2;
 
     MPI_Init( &argc, &argv );
     MPI_Comm_size(MPI_COMM_WORLD,&numprocs);
@@ -73,6 +73,7 @@ int main(int argc, char *argv[]){
         for(i=0; i<MAX; i++)
 		    list[i] = i;
 	    shuffle(list,MAX);
+        t1 = MPI_Wtime();
     }
     
     
@@ -90,18 +91,22 @@ int main(int argc, char *argv[]){
 					rank_list[j]++;
 			}	
 		}	
-
+    
+    for(i=0; i<MAX/numprocs; i++){
+        printf("process: %d rank: %d num: %d\n",myid,rank_list[i],buffer[i]);
+    }
 	for(i=0; i<MAX/numprocs; i++)
 		sort_list[rank_list[i]] = buffer[i];
 
     MPI_Gather(sort_list,MAX/numprocs,MPI_INT,list,MAX/numprocs,MPI_INT,0,MPI_COMM_WORLD);
 
     if(myid == 0){
+        t2 = MPI_Wtime();
         int final[MAX];
         mergearray(numprocs,list,final);
-        for(i=0; i<MAX; i++)
-		    printf("%d\n",final[i]);
-        
+        // for(i=0; i<MAX; i++)
+		//     printf("%d\n",final[i]);
+        // printf("%d : %.3f sec\n",MAX,t2-t1);
     }
 
     MPI_Finalize(); 
